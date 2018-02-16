@@ -14,23 +14,6 @@ from torch.autograd import Variable
 from ModelDefine import DsModel
 from ModelDefine import Embed
 
-style = StyleData()
-style.load('all_style')
-train_data = np.load('trainDataOfIndex.npy')
-const = Constants(style.n_words)
-
-ds = DsModel(embedded_size=const.Embedding_size,
-             num_in_channels=1,
-             hidden_size=const.Hidden_size,
-             kind_filters=const.Ds_filters,
-             num_filters=const.Ds_num_filters)
-
-
-embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
-optimizer1 = optim.Adam(ds.parameters(),const.Lr)
-optimizer2 = optim.Adam(embedding.parameters(),const.Lr)
-criterion = nn.CrossEntropyLoss()
-
 def train(epoches, batch_size, train_data):
     data = train_data
     train_data = indexData2variable(train_data)
@@ -113,3 +96,20 @@ def getclfloss(train_data,d_model,criterion):
     return loss.data.numpy()[0]/(len(train_data[0]) + len(train_data[1]))
 
 # in this code you just need to use train function is OK and try to adjust some parameters
+if __name__ == "__main__":
+    style = StyleData()
+    style.load('./data/style')
+    train_data = np.load('./data/trainDataOfIndex.npy')
+    const = Constants(style.n_words)
+
+    ds = DsModel(embedded_size=const.Embedding_size,
+                 num_in_channels=1,
+                 hidden_size=const.Hidden_size,
+                 kind_filters=const.Ds_filters,
+                 num_filters=const.Ds_num_filters)
+
+    embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
+    optimizer1 = optim.Adam(ds.parameters(), const.Lr)
+    optimizer2 = optim.Adam(embedding.parameters(), const.Lr)
+    criterion = nn.CrossEntropyLoss()
+    train(100,10,train_data)
