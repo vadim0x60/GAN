@@ -1,2 +1,2 @@
 # LANGUAGE-STYLE-TRANSFER-FROM-NON-PARALLEL-TEXT-WITH-ARBITRARY-STYLES-Pytorch-Implement
-This Project is the Implement of the Paper LANGUAGE STYLE TRANSFER FROM NON-PARALLEL TEXT WITH ARBITRARY STYLES with pytorch, and mainly focus on chinese.
+This Project is the Implement of the Paper LANGUAGE STYLE TRANSFER FROM NON-PARALLEL TEXT WITH ARBITRARY STYLES with pytorch, and mainly focus on Chinese.
