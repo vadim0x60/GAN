@@ -1,6 +1,4 @@
 # coding: utf-8
-# the data this procedure can use 
-
 from io import open
 import string
 import glob
