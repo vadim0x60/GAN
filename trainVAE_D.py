@@ -1,4 +1,5 @@
 # coding: utf-8
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,25 +11,27 @@ from Constant import Constants
 from load_data import StyleData
 from PreTrainDs import indexData2variable
 
-gan = torch.load('gan.pkl')
 
+def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
+	# load some necessary model and data
+	gan = torch.load('./Model/gan.pkl')
+	style = StyleData()
+	style.load('./data/all_style')
+	const = Constants(style.n_words)
+	optimizer = optim.Adam(gan.parameters(),lr=const.Lr)
+	lamda1 = 1
+	lamda2 = 1
+	lamda3 = 3
+	cross_entropy = nn.CrossEntropyLoss()
 
-style = StyleData()
-style.load('all_style')
-const = Constants(style.n_words)
-train_data = np.load('trainDataOfIndex.npy')
-optimizer = optim.Adam(gan.parameters(),lr=const.Lr)
-ds = torch.load('Ds.pkl')
-ds_emb = torch.load('embedding.pkl')
-lamda1 = 1
-lamda2 = 1
-lamda3 = 3
-cross_entropy = nn.CrossEntropyLoss()
-
-def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb):
+	# init the state of some model
     ds_model.train(False)
     ds_emb.train(False)
+
+    # prepare the train_data
     train_data = indexData2variable(data)
+
+    # start the training loop
     for i in range(epoches):
         shuffleData(train_data)
         train_data = build2pairs(train_data)
@@ -49,7 +52,9 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb):
             Ladv = 0
             optimizer.zero_grad()
             Loss = 0
-            if random.choice([0]):
+
+            # before we let the D lead the gradient the D model must be strong enough
+            if random.choice([0,1]) and not pretrainD:
                 for seqs in tempdata:
                     dic = gan(seqs[0],seqs[1],D_train=False)
 #                     print dic
@@ -89,3 +94,30 @@ def shuffleData(train_data):
         random.shuffle(train_data)
 
 
+if __name__ == "__main__":
+	"""
+	you shuld use this script in this way:
+	python trainVAE_D.py <epoches> <batch_size> <pretrainD?> <traindatafilename>
+
+	for instance: 
+	python trainVAE_D.py 1000 20 yes/no ./data/trainDataOfIndex.npy
+	"""
+	
+	booldic = {'yes':True,
+				'y':True,
+				'Y':True,
+				'Yes':True,
+				'YES':True,
+				'no':False,
+				'N':False,
+				'n':False,
+				'NO':False,
+				'No':False,}
+	ds = torch.load('./Model/Ds.pkl')
+	ds_emb = torch.load('./Model/embedding.pkl')
+	train_data = np.load(sys.argv[4])
+	epoches = int(sys.argv[1])
+	batch_size = int(sys.argv[2])
+	pretrainD = booldic[sys.argv[3]]
+
+	trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD)
