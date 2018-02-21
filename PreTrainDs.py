@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 import matplotlib.pyplot as plt
@@ -97,19 +96,42 @@ def getclfloss(train_data,d_model,criterion):
 
 # in this code you just need to use train function is OK and try to adjust some parameters
 if __name__ == "__main__":
-    style = StyleData()
-    style.load('./data/style')
-    train_data = np.load('./data/trainDataOfIndex.npy')
-    const = Constants(style.n_words)
+	"""
+	you shuld use this this script in this way
+	python PretrainDs.py <styledatafilename> <traindatafilename> <buildNewModel?> <ModelName> epoches
 
-    ds = DsModel(embedded_size=const.Embedding_size,
-                 num_in_channels=1,
-                 hidden_size=const.Hidden_size,
-                 kind_filters=const.Ds_filters,
-                 num_filters=const.Ds_num_filters)
+	for instance:
+		python ./data./style(don't add .npy) ./data/trainDataOfindex.npy yes ./Model/Ds.pkl epoches
+	"""
+	booldic = {'yes':True,
+				'y':True,
+				'Y':True,
+				'Yes':True,
+				'YES':True,
+				'no':False,
+				'N':False,
+				'n':False,
+				'NO':False,
+				'No':False,}
+
+    style = StyleData()
+    style.load(sys.argv[1])
+    train_data = np.load(sys.argv[2])
+    const = Constants(style.n_words)
+    buildNewModel = booldic[sys.argv[3]]
+
+    if not buildNewModel:
+    	ds = DsModel(embedded_size=const.Embedding_size,
+                 	num_in_channels=1,
+                 	hidden_size=const.Hidden_size,
+                 	kind_filters=const.Ds_filters,
+                 	num_filters=const.Ds_num_filters)
+    else:
+    	ds = torch.load(sys.argv[4])
 
     embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
     optimizer1 = optim.Adam(ds.parameters(), const.Lr)
     optimizer2 = optim.Adam(embedding.parameters(), const.Lr)
     criterion = nn.CrossEntropyLoss()
-    train(100,10,train_data)
+    train(sys.argv[5],10,train_data)
+    torch.save(ds,sys.argv[4])
