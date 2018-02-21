@@ -35,6 +35,6 @@ if __name__ == "__main__":
     datas = np.load('./data/wikiseqdata.npy')[:len(seqs)]
     style = ld.StyleData([datas,seqs])
     seqdata = ld.data2index([datas,seqs],style=style)
-    style.save('wiki2songci')
+    style.save('./data/wiki2songci')
     array = np.array(seqdata)
-    np.save('traindatawiki2songci',array)
+    np.save('./data/traindatawiki2songci',array)

@@ -18,7 +18,7 @@ def readfile(filename):
 
 
 def text2seq(data):
-    data = [list(jieba.cut(s)) for s in data]
+    data = [list(jieba.cut(s)) for s in data if len(list(jieba.cut(s))) > 7]
     return data
 
 

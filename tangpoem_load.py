@@ -32,10 +32,10 @@ if __name__ == "__main__":
     data = []
     for fname in filenames:
         data.extend(poet2seq(read_poet(fname)))
-    datas = np.load('../data/wikiseqdata.npy')
+    datas = np.load('./data/wikiseqdata.npy')
     style = ld.StyleData([datas,data])
     indexdata = ld.data2index([datas,data],style)
     array = np.array(indexdata)
-    np.save('traindatawiki2poet',array)
-    style.save('wiki2poerstyle')
+    np.save('./data/traindatawiki2poet',array)
+    style.save('./data/wiki2poerstyle')
 

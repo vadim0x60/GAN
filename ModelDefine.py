@@ -374,7 +374,8 @@ class GANModel(nn.Module):
             embedd_x_hat = self.embedding(x_hat, index=False)
             x_hat, x_hat_noT, hidden = self.G(embedd_x_hat.view(1, 1, -1), hidden.view(1, 1, -1))
 
-            if x_hat.topk(1)[1].data.numpy() == 1 and length_fix == False:  # 1 represent the end of the seq
+            # the sequence's length be generated should be larger than 6 at least 
+            if x_hat.topk(1)[1].data.numpy() == 1 and not length_fix and i >= 6:  # 1 represent the end of the seq
                 break
 
             x_hats.append(x_hat)
