@@ -11,6 +11,7 @@ def readfile(filename):
     con = Constants(100)
     data = open(filename, encoding='utf-8').read().strip().split('\n')
     data = [split(seq.lower()) for seq in data]
+    # do we need to constraint the length or just padding is enough
     data = [s for s in data if con.Max_len > len(s) > con.Min_len]
     return data
 
@@ -27,14 +28,14 @@ def saveTrainData(filenames):
     trtdata = readfile(trtname)
     datapairs = [srcdata, trtdata]
     style = StyleData(datapairs)
-    style.save('./data/style')
+    style.save('./traindata/style')
     datapairs = data2index(datapairs, style)
     datapairs = np.array(datapairs)
-    np.save('./data/trainDataOfIndex', datapairs)
+    np.save('./traindata/trainDataOfIndex', datapairs)
     return
 
 
 if __name__ == "__main__":
-    filenames = ['./data/yelp/sentiment.test.0', './data/yelp/sentiment.test.1']
+    filenames = ['./data/yelp/sentiment.train.0', './data/yelp/sentiment.train.1']
     saveTrainData(filenames)
     print("finished")

@@ -44,7 +44,7 @@ class DsModel(nn.Module):
         self.linear_out = nn.Linear(hidden_size, 2)
         self.drop = nn.Dropout(0.5)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
         """
@@ -158,7 +158,7 @@ class GModel(nn.Module):
 
         self.gru = nn.GRU(embedding_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, n_vocab)
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
         self.relu = nn.ReLU()
 
     def forward(self, x, hidden):
@@ -199,7 +199,7 @@ class DModel(nn.Module):
         self.linear_out = nn.Linear(hidden_size, 2)
         self.drop = nn.Dropout(0.5)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
         """

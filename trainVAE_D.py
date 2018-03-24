@@ -26,6 +26,8 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
 
 	# init the state of some model
     ds_model.train(False)
+    # don't we need to train the embedding?
+    # yes, we need to train the embeding but we don't need to train the ds_embdding
     ds_emb.train(False)
 
     # prepare the train_data
@@ -75,6 +77,7 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
             print Loss.data.numpy()[0]
             Loss.backward()
             optimizer.step()
+    torch.save(gan, "./Model/gan.pkl")
             
                 
 def build2pairs(train_data):
@@ -121,3 +124,4 @@ if __name__ == "__main__":
 	pretrainD = booldic[sys.argv[3]]
 
 	trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD)
+    torch.save(ds_emb,'./Model/embedding.pkl')

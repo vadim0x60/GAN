@@ -18,5 +18,6 @@ class Constants(object):
         self.Temper = 0.0001
         self.Max_len = 40
         self.Min_len = 6 # 6 is the max window size of the filters
+        self.use_cuda = True
         
 
