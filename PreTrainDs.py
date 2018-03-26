@@ -19,22 +19,24 @@ def train(epoches, batch_size, train_data):
     print "start trainning..........", len(train_data[0])
     train_data = indexData2variable(train_data)
     # has become the cuda data
-    Loss = []
-    acc = []
+#     Loss = []
+#     acc = []
     for i in range(epoches):
-        print i
-        if i % 100 == 0:
+        print i,
+        if i % 10 == 0:
             nowloss = getclfloss(train_data,ds,criterion)
             nowacc = getclfacc(train_data,ds)
-            Loss.append(nowloss)
-            acc.append(nowacc)
+#             Loss.append(nowloss)
+#             acc.append(nowacc)
+            torch.save(ds,'./Model/Ds.pkl')
+            print "saved sucess"
             print "%d\t\tacc:%.4f\tloss:%.4f" % (i, nowacc, nowloss)
         count = 0
         while count < max(len(train_data[0]),len(train_data[1])):
             temp_data1 = train_data[0][count:count+batch_size]
             temp_data2 = train_data[1][count:count+batch_size]
             count += batch_size
-            loss = Variable(torch.Tensor([0])).cuda()
+            loss = Variable(torch.Tensor([0]).cuda())
             optimizer1.zero_grad()
             optimizer2.zero_grad()
             
@@ -52,13 +54,13 @@ def train(epoches, batch_size, train_data):
             optimizer1.step()
             optimizer2.step()
     print "trainning finished.........."
-    return Loss, acc
+    # return Loss, acc
 
 
 def indexData2variable(data): 
     temp_data = [[],[]]
     for i in range(2):
-        temp_data[i] = [Variable(torch.LongTensor(seq)).cuda() for seq in data[i]]
+        temp_data[i] = [Variable(torch.LongTensor(seq).cuda()) for seq in data[i]]
     return temp_data
 
 
@@ -70,16 +72,15 @@ def getclfacc(train_data,d_model):
     """
     d_model.train(False)
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
-        print "type don't fit"
         train_data = indexData2variable(train_data)
     acc = 0
     for i in range(2):
-        for s in train_data[i]:
+        for s in train_data[i][:10000]:
             emb = embedding(s).unsqueeze(0).unsqueeze(0)
             if d_model(emb).topk(1)[1].data.cpu().numpy()[0] == i:
                 acc += 1
     d_model.train(True)
-    return acc*1.0/(len(train_data[0]) + len(train_data[1]))
+    return acc*1.0/(len(train_data[0][:10000]) + len(train_data[1][:10000]))
 
 
 def getclfloss(train_data,d_model,criterion):
@@ -89,20 +90,16 @@ def getclfloss(train_data,d_model,criterion):
     d_model   : ds model or d model to classfify two class
     criterion : crossentropy
     """
-    count  = 0
     d_model.train(False)
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
         train_data = indexData2variable(train_data)
     loss = 0
     for i in range(2):
-        for s in train_data[i]:
-            count += 1
-            if count % 1000 == 0:
-                print count
+        for s in train_data[i][:10000]:
             emb = embedding(s).unsqueeze(0).unsqueeze(0)
             loss += criterion(d_model(emb),Variable(torch.cuda.LongTensor([i]))).data
     d_model.train(True)
-    return loss[0]/(len(train_data[0]) + len(train_data[1]))
+    return loss[0]/(len(train_data[0][:10000]) + len(train_data[1][:10000]))
 
 # in this code you just need to use train function is OK and try to adjust some parameters
 if __name__ == "__main__":
@@ -118,11 +115,10 @@ if __name__ == "__main__":
     style = StyleData()
     style.load(sys.argv[1])
     train_data = np.load(sys.argv[2])
-    # 
-#     train_data = [train_data[0][:10000], train_data[1][:10000]]
     const = Constants(style.n_words)
     buildNewModel = booldic[sys.argv[3]]
     if buildNewModel:
+        print "build new model"
         ds = DsModel(embedded_size=const.Embedding_size,
                     num_in_channels=1,
                     hidden_size=const.Hidden_size,
@@ -130,6 +126,7 @@ if __name__ == "__main__":
                     num_filters=const.Ds_num_filters).cuda()
         ds = ds.cuda() if const.use_cuda else ds
     else:
+        print "use old model"
         ds = torch.load(sys.argv[4]) if const.use_cuda else ds
 
     embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
