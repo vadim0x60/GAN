@@ -18,17 +18,21 @@ def train(epoches, batch_size, train_data):
     # data = train_data
     print "start trainning..........", len(train_data[0])
     train_data = indexData2variable(train_data)
-    # has become the cuda data
-#     Loss = []
-#     acc = []
+    
     for i in range(epoches):
         print i,
         if i % 10 == 0:
+            ds.eval()
+            embedding.eval()
             nowloss = getclfloss(train_data,ds,criterion)
-            nowacc = getclfacc(train_data,ds)
+            nowacc = getclfacc(train_data)
 #             Loss.append(nowloss)
 #             acc.append(nowacc)
             torch.save(ds,'./Model/Ds.pkl')
+            torch.save(embedding,'./Model/Ds_emb.pkl')
+            ds.train()
+            embedding.train()
+                
             print "saved sucess"
             print "%d\t\tacc:%.4f\tloss:%.4f" % (i, nowacc, nowloss)
         count = 0
@@ -61,25 +65,26 @@ def indexData2variable(data):
     temp_data = [[],[]]
     for i in range(2):
         temp_data[i] = [Variable(torch.LongTensor(seq).cuda()) for seq in data[i]]
+    
     return temp_data
 
 
-def getclfacc(train_data,d_model):
+def getclfacc(train_data):
     """
     Args:
     trian_data : data[0] is the source seqs data[1] is the target style
     d_model    : ds model or d model to classfify two class
     """
-    d_model.train(False)
+    
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
         train_data = indexData2variable(train_data)
     acc = 0
     for i in range(2):
         for s in train_data[i][:10000]:
             emb = embedding(s).unsqueeze(0).unsqueeze(0)
-            if d_model(emb).topk(1)[1].data.cpu().numpy()[0] == i:
+            if ds(emb).topk(1)[1].data.cpu().numpy()[0] == i:
                 acc += 1
-    d_model.train(True)
+    
     return acc*1.0/(len(train_data[0][:10000]) + len(train_data[1][:10000]))
 
 
@@ -90,7 +95,7 @@ def getclfloss(train_data,d_model,criterion):
     d_model   : ds model or d model to classfify two class
     criterion : crossentropy
     """
-    d_model.train(False)
+    
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
         train_data = indexData2variable(train_data)
     loss = 0
@@ -98,14 +103,14 @@ def getclfloss(train_data,d_model,criterion):
         for s in train_data[i][:10000]:
             emb = embedding(s).unsqueeze(0).unsqueeze(0)
             loss += criterion(d_model(emb),Variable(torch.cuda.LongTensor([i]))).data
-    d_model.train(True)
+    
     return loss[0]/(len(train_data[0][:10000]) + len(train_data[1][:10000]))
 
 # in this code you just need to use train function is OK and try to adjust some parameters
 if __name__ == "__main__":
     """
     you shuld use this this script in this way
-    python PretrainDs.py <styledatafilename> <traindatafilename> <buildNewModel?> <ModelName> epoches
+    python PretrainDs.py <styledatafilename> <traindatafilename> <buildNewModel?> <ModelName>  emb_name epoches
 
     for instance:
         python ./traindata./style(don't add .npy) ./traindata/trainDataOfindex.npy yes ./Model/Ds.pkl epoches
@@ -115,8 +120,10 @@ if __name__ == "__main__":
     style = StyleData()
     style.load(sys.argv[1])
     train_data = np.load(sys.argv[2])
-    const = Constants(style.n_words)
     buildNewModel = booldic[sys.argv[3]]
+    
+    const = Constants(style.n_words)
+    
     if buildNewModel:
         print "build new model"
         ds = DsModel(embedded_size=const.Embedding_size,
@@ -125,14 +132,28 @@ if __name__ == "__main__":
                     kind_filters=const.Ds_filters,
                     num_filters=const.Ds_num_filters).cuda()
         ds = ds.cuda() if const.use_cuda else ds
+        embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
+        embedding = embedding.cuda()
     else:
         print "use old model"
-        ds = torch.load(sys.argv[4]) if const.use_cuda else ds
+        ds = torch.load(sys.argv[4])
+        ds = ds.cuda()
+        embedding = torch.load(sys.argv[5])
+        embedding = embedding.cuda()
 
-    embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
-    embedding = embedding.cuda() if const.use_cuda else embedding
+        
+
+
+    
     optimizer1 = optim.Adam(ds.parameters(), const.Lr)
     optimizer2 = optim.Adam(embedding.parameters(), const.Lr)
+    
     criterion = nn.CrossEntropyLoss()
-    train(int(sys.argv[5]),10,train_data)
+    
+    train(int(sys.argv[6]),10,train_data)
+    
+
+    ds.train(False)
     torch.save(ds,sys.argv[4])
+    torch.save(embedding,sys.argv[5])
+    print "final saved model"

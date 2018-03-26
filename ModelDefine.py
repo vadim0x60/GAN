@@ -42,9 +42,9 @@ class DsModel(nn.Module):
 
         self.linear = nn.Linear(num_filters * len(kind_filters), hidden_size)
         self.linear_out = nn.Linear(hidden_size, 2)
-        self.drop = nn.Dropout(0.5)
+        self.drop = nn.Dropout(0.2)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=-1)
+        self.softmax = nn.Softmax(dim = -1)
 
     def forward(self, x):
         """
