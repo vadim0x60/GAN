@@ -93,7 +93,7 @@ class EzModel(nn.Module):
         return self.relu(outputs), self.relu(hidden)
 
     def init_hidden(self):
-        return Variable(torch.zeros(1, 1, self.hidden_size))  # the minibatch is 1
+        return Variable(torch.zeros(1, 1, self.hidden_size).cuda())  # the minibatch is 1
 
 
 class EyModel(nn.Module):
@@ -167,7 +167,7 @@ class GModel(nn.Module):
         N_batch is usually 1, and the Len_sequence is 1 and in this way can we collect the hidden
         the output is 1 * onehot_size
         """
-
+#         print x,hidden
         hidden, output = self.gru(x, hidden)
         output = self.softmax(self.relu(self.out(self.relu(hidden))).view(output.size()[0], -1))
         hidden = self.relu(hidden)
@@ -176,7 +176,7 @@ class GModel(nn.Module):
         return self.softmax(logit / self.temper), logit, hidden
 
     def init_hidden(self):
-        return Variable(torch.zeros(1, 1, self.hidden_size), requires_grad=False)
+        return Variable(torch.zeros(1, 1, self.hidden_size).cuda(), requires_grad=False)
 
 
 class DModel(nn.Module):
@@ -242,7 +242,7 @@ class GANModel(nn.Module):
     """
 
     def __init__(self, style_represent, content_represent, D_filters, D_num_filters, Ey_filters,
-                 Ey_num_filters, embedding_size, n_vocab, temper, max_len=40):
+                 Ey_num_filters, embedding_size, n_vocab, temper, max_len=40, min_len = 6):
         """
         style_represent is the dim we choose to represent the style
         content_represent is the dim we choose to represent the content
@@ -254,14 +254,19 @@ class GANModel(nn.Module):
         self.style_represent = Ey_num_filters * len(Ey_filters)
         self.temper = temper
         self.max_len = max_len
+        self.min_len = min_len
+        
         self.Ez = EzModel(embedding_size, content_represent)  # hidden_size is the content_represent
         # content_represent == conten_represent
         self.Ey = EyModel(1, Ey_num_filters, Ey_filters, embedding_size)
         # style_represent == Ey_num_filters * Len(Ey_filters)
         self.G = GModel(content_represent + self.style_represent, n_vocab, embedding_size, temper)
         self.D = DModel(D_filters, D_num_filters, 1, content_represent + self.style_represent)
+        
+        
         self.embedding = Embed(n_vocab, embedding_size)
-        self.go = self.embedding(Variable(torch.LongTensor([0])))
+        self.embedding = self.embedding.cuda()
+        self.go = self.embedding(Variable(torch.LongTensor([0]).cuda()))
 
     def forward(self, x1, x2, Ez_train=True,
                 G_train=True,
@@ -339,6 +344,7 @@ class GANModel(nn.Module):
             embedd_x2_wl = self.embedding(x2_wl, index=False)
             outputs, z2_wl = self.Ez(embedd_x2_wl.unsqueeze(1), hidden)
             x2_bar, x2_bar_noT, x2_bar_hid = self.get_x_hat_hidden(z2_wl, y_star, x2_seq_len)
+            
         if Ladv:
             D_x1_wl = self.D(x1_wl_hid.view(1, 1, x1_wl_hid.size()[0], -1))
             D_x2_hat = self.D(x2_hat_hid.view(1, 1, x2_hat_hid.size()[0], -1))
@@ -369,13 +375,14 @@ class GANModel(nn.Module):
         x_hats.append(x_hat)
         x_hats_noT.append(x_hat_noT)
         hiddens.append(hidden)
+        
         for i in range(1, seq_len):
 
             embedd_x_hat = self.embedding(x_hat, index=False)
             x_hat, x_hat_noT, hidden = self.G(embedd_x_hat.view(1, 1, -1), hidden.view(1, 1, -1))
 
             # the sequence's length be generated should be larger than 6 at least 
-            if x_hat.topk(1)[1].data.numpy() == 1 and not length_fix and i >= 6:  # 1 represent the end of the seq
+            if x_hat.topk(1)[1].data.cpu().numpy() == 1 and not length_fix and i >= self.min_len:
                 break
 
             x_hats.append(x_hat)

@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from ModelDefine import DsModel
 from ModelDefine import Embed
 import sys
+import time
 
 def train(epoches, batch_size, train_data):
     # data = train_data
@@ -20,53 +21,71 @@ def train(epoches, batch_size, train_data):
     train_data = indexData2variable(train_data)
     
     for i in range(epoches):
+        start_time = time.time()
         print i,
+        
         if i % 10 == 0:
             ds.eval()
             embedding.eval()
+            
             nowloss = getclfloss(train_data,ds,criterion)
             nowacc = getclfacc(train_data)
-#             Loss.append(nowloss)
-#             acc.append(nowacc)
+            
             torch.save(ds,'./Model/Ds.pkl')
             torch.save(embedding,'./Model/Ds_emb.pkl')
+            
             ds.train()
             embedding.train()
                 
             print "saved sucess"
             print "%d\t\tacc:%.4f\tloss:%.4f" % (i, nowacc, nowloss)
+            
+            
         count = 0
         while count < max(len(train_data[0]),len(train_data[1])):
             temp_data1 = train_data[0][count:count+batch_size]
             temp_data2 = train_data[1][count:count+batch_size]
+            
             count += batch_size
+            
             loss = Variable(torch.Tensor([0]).cuda())
+            
             optimizer1.zero_grad()
             optimizer2.zero_grad()
             
             for seq in temp_data1:
                 emb_seq = embedding(seq).unsqueeze(0).unsqueeze(0)
                 y_pred = ds(emb_seq)
+                
                 loss += criterion(y_pred,Variable(torch.cuda.LongTensor([0])))
             for seq in temp_data2:
                 emb_seq = embedding(seq).unsqueeze(0).unsqueeze(0)
                 y_pred = ds(emb_seq)
+                
                 loss += criterion(y_pred,Variable(torch.cuda.LongTensor([1])))
                 
             if loss.data[0] != 0:
                 loss.backward()
+                
+                
             optimizer1.step()
             optimizer2.step()
+            
+        end_time = time.time()
+        print (end_time-start_time)/60
+        
+        
     print "trainning finished.........."
-    # return Loss, acc
 
 
+    
 def indexData2variable(data): 
     temp_data = [[],[]]
     for i in range(2):
         temp_data[i] = [Variable(torch.LongTensor(seq).cuda()) for seq in data[i]]
     
     return temp_data
+
 
 
 def getclfacc(train_data):
@@ -78,6 +97,7 @@ def getclfacc(train_data):
     
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
         train_data = indexData2variable(train_data)
+        
     acc = 0
     for i in range(2):
         for s in train_data[i][:10000]:
@@ -98,6 +118,7 @@ def getclfloss(train_data,d_model,criterion):
     
     if type(train_data[0][0]) != type(Variable(torch.Tensor([1])).cuda()):
         train_data = indexData2variable(train_data)
+        
     loss = 0
     for i in range(2):
         for s in train_data[i][:10000]:
@@ -105,6 +126,7 @@ def getclfloss(train_data,d_model,criterion):
             loss += criterion(d_model(emb),Variable(torch.cuda.LongTensor([i]))).data
     
     return loss[0]/(len(train_data[0][:10000]) + len(train_data[1][:10000]))
+
 
 # in this code you just need to use train function is OK and try to adjust some parameters
 if __name__ == "__main__":

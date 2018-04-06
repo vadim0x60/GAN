@@ -14,7 +14,7 @@ from PreTrainDs import indexData2variable
 if __name__ == "__main__":
     # this is just to build the gan model and save the network to use later
     style = StyleData()
-    style.load('./data/style')
+    style.load('./traindata/style')
     const = Constants(n_vocab=style.n_words)
     gan = GANModel(content_represent=const.Content_represent,
                    D_filters=const.D_filters,
