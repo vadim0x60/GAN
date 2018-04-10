@@ -358,6 +358,7 @@ class GANModel(nn.Module):
                 'x2_hat_noT': x2_hat_noT,
                 'y1': y1,
                 'y_star': y_star,
+                'x1_wl':x1_wl,
                 'x1_wl_hid': x1_wl_hid,
                 'x1_bar': x1_bar,
                 'x1_bar_noT': x1_bar_noT,
