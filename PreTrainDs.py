@@ -17,12 +17,12 @@ import time
 
 def train(epoches, batch_size, train_data):
     # data = train_data
-    print "start trainning..........", len(train_data[0])
+    print("start trainning..........", len(train_data[0]))
     train_data = indexData2variable(train_data)
     
     for i in range(epoches):
         start_time = time.time()
-        print i,
+        print(i, end=' ')
         
         if i % 10 == 0:
             ds.eval()
@@ -37,8 +37,8 @@ def train(epoches, batch_size, train_data):
             ds.train()
             embedding.train()
                 
-            print "saved sucess"
-            print "%d\t\tacc:%.4f\tloss:%.4f" % (i, nowacc, nowloss)
+            print("saved sucess")
+            print("%d\t\tacc:%.4f\tloss:%.4f" % (i, nowacc, nowloss))
             
             
         count = 0
@@ -72,10 +72,10 @@ def train(epoches, batch_size, train_data):
             optimizer2.step()
             
         end_time = time.time()
-        print (end_time-start_time)/60
+        print((end_time-start_time)/60)
         
         
-    print "trainning finished.........."
+    print("trainning finished..........")
 
 
     
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     python PretrainDs.py <styledatafilename> <traindatafilename> <buildNewModel?> <ModelName>  emb_name epoches
 
     for instance:
-        python ./traindata./style(don't add .npy) ./traindata/trainDataOfindex.npy yes ./Model/Ds.pkl epoches
+        python ./data./style(don't add .npy) ./data/trainDataOfindex.npy yes ./Model/Ds.pkl epoches
     """
     
     booldic = dict(yes=True, y=True, Y=True, Yes=True, YES=True, no=False, N=False, n=False, NO=False, No=False)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     const = Constants(style.n_words)
     
     if buildNewModel:
-        print "build new model"
+        print("build new model")
         ds = DsModel(embedded_size=const.Embedding_size,
                     num_in_channels=1,
                     hidden_size=const.Hidden_size,
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         embedding = Embed(embedding_size=const.Embedding_size, n_vocab=const.N_vocab)
         embedding = embedding.cuda()
     else:
-        print "use old model"
+        print("use old model")
         ds = torch.load(sys.argv[4])
         ds = ds.cuda()
         embedding = torch.load(sys.argv[5])
@@ -178,4 +178,4 @@ if __name__ == "__main__":
     ds.train(False)
     torch.save(ds,sys.argv[4])
     torch.save(embedding,sys.argv[5])
-    print "final saved model"
+    print("final saved model")

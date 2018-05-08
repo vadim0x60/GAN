@@ -35,13 +35,13 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
     train_data = build2pairs(train_data)
     
     
-    print len(train_data)
+    print(len(train_data))
     for i in range(epoches):
-        print "epoches:\t", i
+        print("epoches:\t", i)
         if pretrainD:
-            print "trainning Discriminator.........."
+            print("trainning Discriminator..........")
         else :
-            print "trainning Generator.............."
+            print("trainning Generator..............")
         
         stime = time.time()
         
@@ -105,7 +105,7 @@ def trainVAE_D(epoches,batch_size,data,ds_model,ds_emb,pretrainD=False):
             
             
         etime = time.time()
-        print "cost time \t%.2f mins" % ((etime - stime)/60)
+        print("cost time \t%.2f mins" % ((etime - stime)/60))
     torch.save(gan, "./Model/gan.pkl")
             
                 
@@ -139,7 +139,7 @@ def get_d_acc(gan, train_data):
         if dic['D_x2_hat'].topk(1)[1].cpu().data.numpy() == 1:
             acc += 1
     
-    print "acc:\t\t %.4f" % (acc/(min_len*2.0))
+    print("acc:\t\t %.4f" % (acc/(min_len*2.0)))
     return acc/(min_len*2.0)
 
     
@@ -176,4 +176,4 @@ if __name__ == "__main__":
 
     trainVAE_D(epoches,batch_size,train_data,ds,ds_emb,pretrainD)
     
-    print "finished trainning......................."
+    print("finished trainning.......................")

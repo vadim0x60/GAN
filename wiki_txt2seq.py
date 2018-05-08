@@ -12,8 +12,8 @@ from glob import glob
 def readfile(filename):
     convert = lng.Converter('zh-hans').convert # this is a function
     filetxt = open(filename,encoding='utf-8').read().strip()
-    filetxt = re.split(u'[。\n]',filetxt)
-    filetxt = [convert(s)+u'。' for s in filetxt if len(s) > 7]
+    filetxt = re.split('[。\n]',filetxt)
+    filetxt = [convert(s)+'。' for s in filetxt if len(s) > 7]
     return filetxt
 
 

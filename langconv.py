@@ -23,7 +23,7 @@ if py3k:
 else:
     _zh2Hant, _zh2Hans = {}, {}
     for old, new in ((zh2Hant, _zh2Hant), (zh2Hans, _zh2Hans)):
-        for k, v in old.items():
+        for k, v in list(old.items()):
             new[k.decode('utf8')] = v.decode('utf8')
     zh2Hant = _zh2Hant
     zh2Hans = _zh2Hans
